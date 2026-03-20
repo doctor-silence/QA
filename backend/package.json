@@ -1,0 +1,11 @@
+{
+  "name": "testflow-backend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Minimal backend scaffold for TestFlow",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "check": "node --check server.js"
+  }
+}
