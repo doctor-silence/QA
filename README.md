@@ -40,6 +40,7 @@ npm run build
 
 ```bash
 cd backend
+cp .env.example .env
 npm run dev
 ```
 
@@ -49,7 +50,26 @@ Backend по умолчанию поднимается на `http://localhost:30
 
 - `GET /health`
 - `GET /api/health`
+- `GET /api/db/health`
 - `GET /api/info`
+
+## PostgreSQL
+
+Backend уже подготовлен для `PostgreSQL`.
+
+Проверить подключение:
+
+```bash
+cd backend
+npm run db:ping
+```
+
+Инициализировать БД схемой:
+
+```bash
+cd backend
+npm run db:init
+```
 
 ## Данные приложения
 

@@ -6,6 +6,12 @@
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
-    "check": "node --check server.js"
+    "check": "node --check server.js && node --check scripts/init-db.js && node --check scripts/ping-db.js && node --check db/pool.js && node --check lib/env.js",
+    "db:init": "node scripts/init-db.js",
+    "db:ping": "node scripts/ping-db.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "pg": "^8.13.3"
   }
 }

@@ -1,7 +1,10 @@
 const http = require('http');
 const { URL } = require('url');
 
-const PORT = Number(process.env.PORT || 3001);
+const { env, getPublicDatabaseConfig } = require('./lib/env');
+const { checkDatabaseConnection, closePool } = require('./db/pool');
+
+const PORT = env.port;
 
 function sendJson(response, statusCode, payload) {
   const body = JSON.stringify(payload);
@@ -14,7 +17,18 @@ function sendJson(response, statusCode, payload) {
   response.end(body);
 }
 
-const server = http.createServer((request, response) => {
+async function getHealthPayload() {
+  const database = await checkDatabaseConnection();
+
+  return {
+    status: database.connected || !database.configured ? 'ok' : 'degraded',
+    service: 'testflow-backend',
+    timestamp: new Date().toISOString(),
+    database,
+  };
+}
+
+const server = http.createServer(async (request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host}`);
 
   if (request.method === 'OPTIONS') {
@@ -28,11 +42,14 @@ const server = http.createServer((request, response) => {
   }
 
   if (request.method === 'GET' && (requestUrl.pathname === '/' || requestUrl.pathname === '/health' || requestUrl.pathname === '/api/health')) {
-    sendJson(response, 200, {
-      status: 'ok',
-      service: 'testflow-backend',
-      timestamp: new Date().toISOString(),
-    });
+    const payload = await getHealthPayload();
+    sendJson(response, payload.status === 'ok' ? 200 : 503, payload);
+    return;
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/api/db/health') {
+    const database = await checkDatabaseConnection();
+    sendJson(response, database.connected || !database.configured ? 200 : 503, database);
     return;
   }
 
@@ -41,6 +58,7 @@ const server = http.createServer((request, response) => {
       name: 'TestFlow backend scaffold',
       version: '1.0.0',
       notes: 'Current frontend still works fully in local-first mode via localStorage.',
+      database: getPublicDatabaseConfig(),
     });
     return;
   }
@@ -54,4 +72,14 @@ const server = http.createServer((request, response) => {
 
 server.listen(PORT, () => {
   console.log(`TestFlow backend running on http://localhost:${PORT}`);
+});
+
+process.on('SIGINT', async () => {
+  await closePool();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await closePool();
+  process.exit(0);
 });
