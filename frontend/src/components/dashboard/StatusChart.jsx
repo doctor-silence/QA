@@ -9,8 +9,20 @@ const COLORS = {
   Pending: '#CBD5E1'
 };
 
+const STATUS_LABELS = {
+  Pass: 'Успешно',
+  Fail: 'Ошибка',
+  Blocked: 'Заблокировано',
+  Skip: 'Пропущено',
+  Pending: 'Ожидает'
+};
+
 export default function StatusChart({ data }) {
-  const chartData = Object.entries(data).map(([name, value]) => ({ name, value }));
+  const chartData = Object.entries(data).map(([name, value]) => ({
+    name,
+    value,
+    label: STATUS_LABELS[name] || name
+  }));
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
   if (total === 0) {
@@ -44,6 +56,7 @@ export default function StatusChart({ data }) {
               ))}
             </Pie>
             <Tooltip 
+              formatter={(value, _name, payload) => [value, payload?.payload?.label || 'Статус']}
               contentStyle={{ 
                 borderRadius: '12px', 
                 border: 'none', 
@@ -53,7 +66,7 @@ export default function StatusChart({ data }) {
             <Legend 
               verticalAlign="bottom" 
               iconType="circle"
-              formatter={(value) => <span className="text-muted-foreground text-sm">{value}</span>}
+              formatter={(value) => <span className="text-muted-foreground text-sm">{STATUS_LABELS[value] || value}</span>}
             />
           </PieChart>
         </ResponsiveContainer>

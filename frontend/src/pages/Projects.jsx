@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Folder, Archive, Edit2, Trash2 } from 'lucide-react';
-import { cn } from "@/lib/utils";
+import { cn, plainTextFromMarkdown, textPreview } from "@/lib/utils";
 import { usePermissions } from '../components/shared/usePermissions';
+import { useModal } from '../components/shared/ModalProvider';
 
 const COLORS = [
   { name: 'Индиго', value: '#6366f1' },
@@ -23,6 +24,7 @@ const COLORS = [
 
 export default function Projects() {
   const permissions = usePermissions();
+  const { showAlert, showConfirm } = useModal();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -51,10 +53,16 @@ export default function Projects() {
 
   const saveMutation = useMutation({
     mutationFn: (data) => {
+      const normalizedData = {
+        ...data,
+        description: plainTextFromMarkdown(data.description || ''),
+      };
+
       if (editingProject) {
-        return appClient.entities.Project.update(editingProject.id, data);
+        return appClient.entities.Project.update(editingProject.id, normalizedData);
       }
-      return appClient.entities.Project.create(data);
+
+      return appClient.entities.Project.create(normalizedData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -84,41 +92,44 @@ export default function Projects() {
     setFormData({
       name: project.name,
       key: project.key,
-      description: project.description || '',
+      description: plainTextFromMarkdown(project.description || ''),
       color: project.color || '#6366f1',
       status: project.status || 'active'
     });
     setDialogOpen(true);
   };
 
-  const handleCreate = () => {
-    const activeProjects = projects.filter(p => p.status === 'active').length;
-    const userPlan = user?.subscription_plan || 'free';
-    
-    if (userPlan === 'free' && activeProjects >= 3) {
-      alert('Достигнут лимит проектов для Free тарифа (3 проекта). Обновите тариф для создания большего количества проектов.');
+  const handleCreate = async () => {
+    const activeProjectsCount = projects.filter((project) => project.status === 'active').length;
+    const currentPlan = user?.subscription_plan || 'free';
+
+    if (currentPlan === 'free' && activeProjectsCount >= 3) {
+      await showAlert({
+        title: 'Лимит проектов достигнут',
+        description: 'Достигнут лимит проектов для Free тарифа (3 проекта). Обновите тариф для создания большего количества проектов.',
+        confirmLabel: 'Понятно',
+      });
       return;
     }
-    
+
     setDialogOpen(true);
   };
 
   const getProjectStats = (projectId) => {
-    const projectCases = testCases.filter(tc => tc.project_id === projectId);
+    const projectCases = testCases.filter((testCase) => testCase.project_id === projectId);
     return {
       total: projectCases.length,
-      approved: projectCases.filter(tc => tc.status === 'Approved').length
+      approved: projectCases.filter((testCase) => testCase.status === 'Approved').length,
     };
   };
 
-  const activeProjects = projects.filter(p => p.status === 'active');
-  const archivedProjects = projects.filter(p => p.status === 'archived');
-  const userPlan = user?.subscription_plan || 'free';
-  const projectLimit = userPlan === 'free' ? 3 : null;
+  const activeProjects = projects.filter((project) => project.status === 'active');
+  const archivedProjects = projects.filter((project) => project.status === 'archived');
+  const currentPlan = user?.subscription_plan || 'free';
+  const projectLimit = currentPlan === 'free' ? 3 : null;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Проекты</h1>
@@ -127,13 +138,12 @@ export default function Projects() {
           </p>
         </div>
         {permissions.canManageStructure && (
-          <Button onClick={handleCreate}>
+          <Button onClick={handleCreate} data-onboarding-projects-create>
             <Plus className="w-4 h-4 mr-2" /> Создать проект
           </Button>
         )}
       </div>
 
-      {/* Plan Info */}
       {projectLimit && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
           <div className="flex items-center justify-between">
@@ -149,12 +159,12 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Active Projects */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-foreground">Активные проекты</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {activeProjects.map(project => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-onboarding-projects-list>
+          {activeProjects.map((project) => {
             const stats = getProjectStats(project.id);
+
             return (
               <div
                 key={project.id}
@@ -165,7 +175,7 @@ export default function Projects() {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: project.color + '20' }}
+                      style={{ backgroundColor: `${project.color}20` }}
                     >
                       <Folder className="w-5 h-5" style={{ color: project.color }} />
                     </div>
@@ -188,8 +198,16 @@ export default function Projects() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-red-500"
-                        onClick={() => {
-                          if (confirm('Удалить проект? Все тест-кейсы останутся без проекта.')) {
+                        onClick={async () => {
+                          const confirmed = await showConfirm({
+                            title: 'Удалить проект?',
+                            description: 'Все тест-кейсы останутся без проекта.',
+                            confirmLabel: 'Удалить',
+                            cancelLabel: 'Отмена',
+                            confirmClassName: 'bg-red-600 hover:bg-red-700',
+                          });
+
+                          if (confirmed) {
                             deleteMutation.mutate(project.id);
                           }
                         }}
@@ -199,11 +217,13 @@ export default function Projects() {
                     </div>
                   )}
                 </div>
-                
+
                 {project.description && (
-                  <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
+                  <p className="text-sm text-muted-foreground mb-3 leading-6">
+                    {textPreview(project.description, 280)}
+                  </p>
                 )}
-                
+
                 <div className="flex items-center gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Тест-кейсов: </span>
@@ -217,6 +237,7 @@ export default function Projects() {
               </div>
             );
           })}
+
           {activeProjects.length === 0 && (
             <div className="col-span-full text-center py-12 text-muted-foreground">
               <Folder className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -226,7 +247,6 @@ export default function Projects() {
         </div>
       </div>
 
-      {/* Archived Projects */}
       {archivedProjects.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
@@ -234,8 +254,9 @@ export default function Projects() {
             Архивные проекты
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {archivedProjects.map(project => {
+            {archivedProjects.map((project) => {
               const stats = getProjectStats(project.id);
+
               return (
                 <div
                   key={project.id}
@@ -258,7 +279,6 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={handleClose}>
         <DialogContent>
           <DialogHeader>
@@ -269,7 +289,7 @@ export default function Projects() {
               <Label>Название проекта</Label>
               <Input
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 placeholder="Например: Мобильное приложение"
               />
             </div>
@@ -277,7 +297,7 @@ export default function Projects() {
               <Label>Ключ проекта</Label>
               <Input
                 value={formData.key}
-                onChange={(e) => setFormData(prev => ({ ...prev, key: e.target.value.toUpperCase() }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, key: e.target.value.toUpperCase() }))}
                 placeholder="Например: MOBILE"
                 maxLength={10}
               />
@@ -289,7 +309,7 @@ export default function Projects() {
               <Label>Описание</Label>
               <Textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder="Краткое описание проекта..."
                 rows={3}
               />
@@ -297,15 +317,16 @@ export default function Projects() {
             <div className="space-y-2">
               <Label>Цвет</Label>
               <div className="flex gap-2 flex-wrap">
-                {COLORS.map(color => (
+                {COLORS.map((color) => (
                   <button
                     key={color.value}
+                    type="button"
                     className={cn(
                       "w-10 h-10 rounded-lg border-2 transition-all",
                       formData.color === color.value ? "border-foreground scale-110" : "border-transparent"
                     )}
                     style={{ backgroundColor: color.value }}
-                    onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
+                    onClick={() => setFormData((prev) => ({ ...prev, color: color.value }))}
                   />
                 ))}
               </div>
@@ -315,16 +336,18 @@ export default function Projects() {
                 <Label>Статус</Label>
                 <div className="flex gap-2">
                   <Button
+                    type="button"
                     variant={formData.status === 'active' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setFormData(prev => ({ ...prev, status: 'active' }))}
+                    onClick={() => setFormData((prev) => ({ ...prev, status: 'active' }))}
                   >
                     Активный
                   </Button>
                   <Button
+                    type="button"
                     variant={formData.status === 'archived' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setFormData(prev => ({ ...prev, status: 'archived' }))}
+                    onClick={() => setFormData((prev) => ({ ...prev, status: 'archived' }))}
                   >
                     Архивный
                   </Button>

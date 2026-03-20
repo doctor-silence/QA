@@ -72,7 +72,7 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Панель управления</h1>
         <p className="text-muted-foreground mt-1">Обзор состояния тестирования</p>
       </div>
 
@@ -101,7 +101,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Среднее время"
-          value={avgTime > 0 ? `${avgMinutes}:${String(avgSeconds).padStart(2, '0')}` : 'N/A'}
+          value={avgTime > 0 ? `${avgMinutes}:${String(avgSeconds).padStart(2, '0')}` : 'Н/Д'}
           subtitle="На один тест"
           icon={Clock}
           color="purple"

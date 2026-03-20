@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
-import { ChevronRight, Folder, FolderOpen, Plus } from 'lucide-react';
+import { ChevronRight, Folder, FolderOpen, Plus, Trash2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-function FolderItem({ folder, folders, selectedId, onSelect, onAddSubfolder, level = 0 }) {
+function FolderItem({
+  folder,
+  folders,
+  selectedId,
+  onSelect,
+  onAddSubfolder,
+  onDeleteFolder,
+  canDelete = false,
+  level = 0,
+}) {
   const [isOpen, setIsOpen] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const children = folders.filter(f => f.parent_id === folder.id);
@@ -40,16 +49,30 @@ function FolderItem({ folder, folders, selectedId, onSelect, onAddSubfolder, lev
         <span className="text-sm font-medium truncate flex-1">{folder.name}</span>
         
         {isHovered && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddSubfolder(folder.id);
-            }}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded transition-opacity"
-            title="Добавить подпапку"
-          >
-            <Plus className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddSubfolder(folder.id);
+              }}
+              className="p-1 hover:bg-accent rounded"
+              title="Добавить подпапку"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+            {canDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteFolder?.(folder.id);
+                }}
+                className="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-600"
+                title="Удалить папку"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         )}
       </div>
       
@@ -63,6 +86,8 @@ function FolderItem({ folder, folders, selectedId, onSelect, onAddSubfolder, lev
               selectedId={selectedId}
               onSelect={onSelect}
               onAddSubfolder={onAddSubfolder}
+              onDeleteFolder={onDeleteFolder}
+              canDelete={canDelete}
               level={level + 1}
             />
           ))}
@@ -72,7 +97,15 @@ function FolderItem({ folder, folders, selectedId, onSelect, onAddSubfolder, lev
   );
 }
 
-export default function FolderTree({ folders, selectedId, onSelect, onAddFolder }) {
+export default function FolderTree({
+  folders,
+  selectedId,
+  onSelect,
+  onAddFolder,
+  onDeleteFolder,
+  onDeleteAllFolders,
+  canDelete = false,
+}) {
   const rootFolders = folders.filter(f => !f.parent_id);
 
   const handleAddSubfolder = (parentId) => {
@@ -83,15 +116,28 @@ export default function FolderTree({ folders, selectedId, onSelect, onAddFolder 
     <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h3 className="font-semibold text-foreground">Модули</h3>
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          className="h-8 w-8 p-0"
-          onClick={() => onAddFolder(null)}
-          title="Добавить корневую папку"
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          {canDelete && rootFolders.length > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
+              onClick={() => onDeleteAllFolders?.()}
+              title="Удалить все модули"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0"
+            onClick={() => onAddFolder(null)}
+            title="Добавить корневую папку"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
       <div className="p-2 max-h-[calc(100vh-280px)] overflow-y-auto">
         <div
@@ -112,6 +158,8 @@ export default function FolderTree({ folders, selectedId, onSelect, onAddFolder 
             selectedId={selectedId}
             onSelect={onSelect}
             onAddSubfolder={handleAddSubfolder}
+            onDeleteFolder={onDeleteFolder}
+            canDelete={canDelete}
           />
         ))}
       </div>

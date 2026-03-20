@@ -71,8 +71,8 @@ export default function BulkEditDialog({ open, onOpenChange, selectedCount, onAp
                   <SelectValue placeholder="Выберите тип" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Manual">Manual</SelectItem>
-                  <SelectItem value="Automated">Automated</SelectItem>
+                  <SelectItem value="Manual">Ручной</SelectItem>
+                  <SelectItem value="Automated">Автоматизированный</SelectItem>
                 </SelectContent>
               </Select>
             )}

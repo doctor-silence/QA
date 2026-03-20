@@ -181,13 +181,13 @@ If you cannot make the actual API call, return a formatted JSON with the bug det
           {enabledConfigs.length === 0 ? (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
               <p className="text-amber-800">
-                Нет настроенных bug-трекеров. Настройте интеграцию в разделе Reports → Integrations
+                Нет настроенных баг-трекеров. Настройте интеграцию в разделе «Отчёты → Интеграции»
               </p>
             </div>
           ) : (
             <>
               <div className="space-y-2">
-                <Label>Bug-трекер</Label>
+                <Label>Баг-трекер</Label>
                 <Select value={selectedTracker} onValueChange={setSelectedTracker}>
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите трекер" />

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const roleConfig = {
   Viewer: {
     icon: Eye,
-    label: 'Viewer',
+    label: 'Наблюдатель',
     color: 'bg-slate-50 text-slate-600 border-slate-200'
   },
   Tester: {
@@ -21,7 +21,7 @@ const roleConfig = {
   },
   Admin: {
     icon: Crown,
-    label: 'Admin',
+    label: 'Администратор',
     color: 'bg-red-50 text-red-600 border-red-200'
   }
 };

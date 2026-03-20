@@ -9,12 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Share2, Copy, ExternalLink, Trash2, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useModal } from '../shared/ModalProvider';
 
 export default function PublicReportGenerator({ testPlan, testRuns }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [expiryDays, setExpiryDays] = useState(7);
   const queryClient = useQueryClient();
+  const { showAlert } = useModal();
 
   const { data: reports = [] } = useQuery({
     queryKey: ['publicReports', testPlan?.id],
@@ -74,10 +76,14 @@ export default function PublicReportGenerator({ testPlan, testRuns }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['publicReports'] })
   });
 
-  const copyLink = (token) => {
+  const copyLink = async (token) => {
     const url = `${window.location.origin}${window.location.pathname}?page=PublicReport&token=${token}`;
-    navigator.clipboard.writeText(url);
-    alert('Ссылка скопирована!');
+    await navigator.clipboard.writeText(url);
+    await showAlert({
+      title: 'Ссылка скопирована',
+      description: 'Публичная ссылка на отчёт скопирована в буфер обмена.',
+      confirmLabel: 'OK',
+    });
   };
 
   if (!testPlan) return null;

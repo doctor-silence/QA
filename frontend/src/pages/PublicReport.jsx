@@ -14,6 +14,14 @@ const statusColors = {
   Pending: '#94A3B8'
 };
 
+const statusLabels = {
+  Pass: 'Успешно',
+  Fail: 'Ошибка',
+  Blocked: 'Заблокировано',
+  Skip: 'Пропущено',
+  Pending: 'Ожидает'
+};
+
 const statusIcons = {
   Pass: CheckCircle2,
   Fail: XCircle,
@@ -76,11 +84,11 @@ export default function PublicReport() {
   const passRate = stats.total > 0 ? Math.round((stats.pass / stats.total) * 100) : 0;
 
   const chartData = [
-    { name: 'Pass', value: stats.pass, color: statusColors.Pass },
-    { name: 'Fail', value: stats.fail, color: statusColors.Fail },
-    { name: 'Blocked', value: stats.blocked, color: statusColors.Blocked },
-    { name: 'Skip', value: stats.skip, color: statusColors.Skip },
-    { name: 'Pending', value: stats.pending, color: statusColors.Pending }
+    { name: 'Pass', label: statusLabels.Pass, value: stats.pass, color: statusColors.Pass },
+    { name: 'Fail', label: statusLabels.Fail, value: stats.fail, color: statusColors.Fail },
+    { name: 'Blocked', label: statusLabels.Blocked, value: stats.blocked, color: statusColors.Blocked },
+    { name: 'Skip', label: statusLabels.Skip, value: stats.skip, color: statusColors.Skip },
+    { name: 'Pending', label: statusLabels.Pending, value: stats.pending, color: statusColors.Pending }
   ].filter(item => item.value > 0);
 
   const isExpired = new Date(report.expires_at) < new Date();
@@ -114,7 +122,7 @@ export default function PublicReport() {
               <div className="text-2xl font-bold text-red-700">{stats.fail}</div>
             </div>
             <div className="bg-indigo-50 rounded-xl p-4">
-              <div className="text-sm text-indigo-600 mb-1">Pass Rate</div>
+              <div className="text-sm text-indigo-600 mb-1">Процент прохождения</div>
               <div className="text-2xl font-bold text-indigo-700">{passRate}%</div>
             </div>
           </div>
@@ -139,8 +147,8 @@ export default function PublicReport() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip formatter={(value, _name, payload) => [value, payload?.payload?.label || 'Статус']} />
+                <Legend formatter={(value) => statusLabels[value] || value} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -188,7 +196,7 @@ export default function PublicReport() {
         {/* Footer */}
         <div className="text-center mt-6 text-sm text-slate-400">
           <p>Сгенерировано {new Date(snapshot.generated_at).toLocaleString('ru-RU')}</p>
-          <p>Powered by TestFlow QA Management System</p>
+          <p>Создано в системе управления QA TestFlow</p>
         </div>
       </div>
     </div>

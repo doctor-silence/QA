@@ -705,6 +705,31 @@ function parseCsv(text) {
     return [];
   }
 
+  const detectDelimiter = (line) => {
+    const delimiters = [',', ';', '\t'];
+    const scores = delimiters.map((delimiter) => ({
+      delimiter,
+      count: line.split(delimiter).length - 1
+    }));
+
+    return scores.sort((left, right) => right.count - left.count)[0]?.delimiter || ',';
+  };
+
+  const delimiter = detectDelimiter(rows[0]);
+
+  const knownHeaderTokens = [
+    'id', 'title', 'name', 'название', 'кейс', 'testcase', 'priority', 'приоритет',
+    'status', 'статус', 'type', 'тип', 'tags', 'теги', 'steps', 'шаги',
+    'requirements', 'требования', 'preconditions', 'предусловия'
+  ];
+
+  const normalizeHeader = (value) => String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^\ufeff/, '')
+    .replace(/\s+/g, '')
+    .replace(/[_-]+/g, '');
+
   const parseLine = (line) => {
     const values = [];
     let currentValue = '';
@@ -721,7 +746,7 @@ function parseCsv(text) {
         } else {
           inQuotes = !inQuotes;
         }
-      } else if (char === ',' && !inQuotes) {
+      } else if (char === delimiter && !inQuotes) {
         values.push(currentValue.trim());
         currentValue = '';
       } else {
@@ -733,7 +758,19 @@ function parseCsv(text) {
     return values;
   };
 
-  const headers = parseLine(rows[0]);
+  const firstRowValues = parseLine(rows[0]).map((value) => value.replace(/^\ufeff/, ''));
+  const hasKnownHeaders = firstRowValues.some((header) => knownHeaderTokens.includes(normalizeHeader(header)));
+
+  if (!hasKnownHeaders) {
+    const columnCount = firstRowValues.length;
+    const generatedHeaders = Array.from({ length: columnCount }, (_, index) => `column_${index + 1}`);
+    return rows.map((row) => {
+      const values = parseLine(row);
+      return Object.fromEntries(generatedHeaders.map((header, index) => [header, values[index] || '']));
+    });
+  }
+
+  const headers = firstRowValues;
   return rows.slice(1).map((row) => {
     const values = parseLine(row);
     return Object.fromEntries(headers.map((header, index) => [header, values[index] || '']));

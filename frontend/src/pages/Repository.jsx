@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { appClient } from '@/api/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Edit3, X } from 'lucide-react';
+import { Plus, Search, Edit3, Trash2, X } from 'lucide-react';
 import FolderTree from '@/components/repository/FolderTree';
 import TestCaseTable from '@/components/repository/TestCaseTable';
 import TestCaseDrawer from '@/components/repository/TestCaseDrawer';
@@ -14,6 +14,7 @@ import { usePermissions } from '@/components/shared/usePermissions';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -36,6 +37,7 @@ export default function Repository() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkEditDialog, setBulkEditDialog] = useState(false);
   const [filters, setFilters] = useState({ tags: [], priorities: [], statuses: [], showFlaky: false });
+  const [deleteDialog, setDeleteDialog] = useState(null);
 
   const { data: folders = [], isLoading: loadingFolders } = useQuery({
     queryKey: ['folders'],
@@ -88,6 +90,78 @@ export default function Repository() {
     }
   });
 
+  const deleteTestCaseMutation = useMutation({
+    mutationFn: async (ids) => {
+      const testCaseIds = Array.isArray(ids) ? ids : [ids];
+      for (const id of testCaseIds) {
+        await appClient.entities.TestCase.delete(id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testCases'] });
+      queryClient.invalidateQueries({ queryKey: ['testCaseHistory'] });
+      setSelectedIds([]);
+      setBulkMode(false);
+      if (selectedCase?.id) {
+        setSelectedCase(null);
+        setIsDrawerOpen(false);
+      }
+    }
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: async ({ folderId, folderIds }) => {
+      const folderIdsToDelete = [];
+
+      const collectDescendants = (currentFolderId) => {
+        folderIdsToDelete.push(currentFolderId);
+
+        folders
+          .filter((folder) => folder.parent_id === currentFolderId)
+          .forEach((childFolder) => collectDescendants(childFolder.id));
+      };
+
+      if (Array.isArray(folderIds) && folderIds.length > 0) {
+        folderIds.forEach((id) => collectDescendants(id));
+      } else if (folderId) {
+        collectDescendants(folderId);
+      }
+
+      const uniqueFolderIdsToDelete = [...new Set(folderIdsToDelete)];
+
+      const caseIdsToDelete = testCases
+        .filter((testCase) => uniqueFolderIdsToDelete.includes(testCase.folder_id))
+        .map((testCase) => testCase.id);
+
+      for (const testCaseId of caseIdsToDelete) {
+        await appClient.entities.TestCase.delete(testCaseId);
+      }
+
+      for (const id of [...uniqueFolderIdsToDelete].reverse()) {
+        await appClient.entities.Folder.delete(id);
+      }
+
+      return { folderIdsToDelete: uniqueFolderIdsToDelete, caseIdsToDelete };
+    },
+    onSuccess: ({ folderIdsToDelete, caseIdsToDelete }) => {
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['testCases'] });
+      queryClient.invalidateQueries({ queryKey: ['testCaseHistory'] });
+
+      if (selectedFolder && folderIdsToDelete.includes(selectedFolder)) {
+        setSelectedFolder(null);
+      }
+
+      if (selectedCase?.id && caseIdsToDelete.includes(selectedCase.id)) {
+        setSelectedCase(null);
+        setIsDrawerOpen(false);
+      }
+
+      setSelectedIds((prev) => prev.filter((id) => !caseIdsToDelete.includes(id)));
+      setDeleteDialog(null);
+    }
+  });
+
   const filteredCases = testCases.filter(tc => {
     const matchesProject = selectedProject === null || tc.project_id === selectedProject;
     const matchesFolder = selectedFolder === null || tc.folder_id === selectedFolder;
@@ -111,6 +185,39 @@ export default function Repository() {
     
     return matchesProject && matchesFolder && matchesSearch && matchesTags && matchesPriority && matchesStatus && matchesFlaky;
   });
+
+  const projectVisibleFolders = useMemo(() => {
+    if (selectedProject === null) {
+      return folders;
+    }
+
+    const folderIds = new Set();
+
+    testCases
+      .filter((testCase) => testCase.project_id === selectedProject && testCase.folder_id)
+      .forEach((testCase) => {
+        let currentFolderId = testCase.folder_id;
+
+        while (currentFolderId) {
+          folderIds.add(currentFolderId);
+          const currentFolder = folders.find((folder) => folder.id === currentFolderId);
+          currentFolderId = currentFolder?.parent_id || null;
+        }
+      });
+
+    return folders.filter((folder) => folderIds.has(folder.id));
+  }, [folders, selectedProject, testCases]);
+
+  useEffect(() => {
+    if (selectedFolder === null) {
+      return;
+    }
+
+    const folderStillVisible = projectVisibleFolders.some((folder) => folder.id === selectedFolder);
+    if (!folderStillVisible) {
+      setSelectedFolder(null);
+    }
+  }, [projectVisibleFolders, selectedFolder]);
 
   const handleAddFolder = (parentId = null) => {
     setNewFolderParentId(parentId);
@@ -143,6 +250,7 @@ export default function Repository() {
   const toggleBulkMode = () => {
     setBulkMode(!bulkMode);
     setSelectedIds([]);
+    setDeleteDialog(null);
   };
 
   const toggleSelectId = (id) => {
@@ -150,6 +258,107 @@ export default function Repository() {
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
+
+  const visibleCaseIds = filteredCases.map((testCase) => testCase.id);
+  const allVisibleSelected = visibleCaseIds.length > 0 && visibleCaseIds.every((id) => selectedIds.includes(id));
+
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((prev) => {
+      if (allVisibleSelected) {
+        return prev.filter((id) => !visibleCaseIds.includes(id));
+      }
+
+      return [...new Set([...prev, ...visibleCaseIds])];
+    });
+  };
+
+  const handleDeleteOne = (testCase) => {
+    setDeleteDialog({
+      mode: 'single',
+      ids: [testCase.id],
+      title: testCase.title,
+    });
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    setDeleteDialog({
+      mode: 'bulk',
+      ids: selectedIds,
+      count: selectedIds.length,
+    });
+  };
+
+  const handleDeleteFolder = (folderId) => {
+    const targetFolder = folders.find((folder) => folder.id === folderId);
+    if (!targetFolder) {
+      return;
+    }
+
+    const descendantIds = [];
+    const collectDescendants = (currentFolderId) => {
+      descendantIds.push(currentFolderId);
+      folders
+        .filter((folder) => folder.parent_id === currentFolderId)
+        .forEach((childFolder) => collectDescendants(childFolder.id));
+    };
+
+    collectDescendants(folderId);
+
+    const nestedFoldersCount = Math.max(descendantIds.length - 1, 0);
+    const linkedCasesCount = testCases.filter((testCase) => descendantIds.includes(testCase.folder_id)).length;
+
+    setDeleteDialog({
+      mode: 'folder',
+      folderId,
+      title: targetFolder.name,
+      count: nestedFoldersCount,
+      linkedCasesCount,
+    });
+  };
+
+  const handleDeleteAllFolders = () => {
+    const rootFolderIds = folders.filter((folder) => !folder.parent_id).map((folder) => folder.id);
+    if (rootFolderIds.length === 0) {
+      return;
+    }
+
+    setDeleteDialog({
+      mode: 'all-folders',
+      folderIds: rootFolderIds,
+      count: folders.length,
+      linkedCasesCount: testCases.filter((testCase) => testCase.folder_id).length,
+    });
+  };
+
+  const confirmDelete = () => {
+    if (deleteDialog?.mode === 'folder' || deleteDialog?.mode === 'all-folders') {
+      if (!deleteDialog.folderId && !deleteDialog.folderIds?.length) {
+        return;
+      }
+
+      deleteFolderMutation.mutate({
+        folderId: deleteDialog.folderId,
+        folderIds: deleteDialog.folderIds,
+      });
+      return;
+    }
+
+    if (!deleteDialog?.ids?.length) {
+      return;
+    }
+
+    deleteTestCaseMutation.mutate(deleteDialog.ids, {
+      onSuccess: () => {
+        setDeleteDialog(null);
+      },
+    });
+  };
+
+  const isDeletePending = deleteTestCaseMutation.isPending || deleteFolderMutation.isPending;
 
   const handleBulkEdit = async ({ action, value }) => {
     const updates = {};
@@ -189,7 +398,7 @@ export default function Repository() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-onboarding-repository-actions>
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Repository</h1>
           <p className="text-muted-foreground mt-1">База тест-кейсов</p>
@@ -198,7 +407,13 @@ export default function Repository() {
           {permissions.canManageStructure && (
             <ImportExportButtons 
               testCases={testCases} 
-              onImportComplete={() => queryClient.invalidateQueries({ queryKey: ['testCases'] })}
+              defaultFolderId={selectedFolder}
+              defaultProjectId={selectedProject}
+              onImportComplete={() => {
+                queryClient.invalidateQueries({ queryKey: ['testCases'] });
+                queryClient.invalidateQueries({ queryKey: ['folders'] });
+                queryClient.invalidateQueries({ queryKey: ['projects'] });
+              }}
             />
           )}
           {permissions.canManageStructure && (
@@ -206,10 +421,25 @@ export default function Repository() {
               <>
                 <Button 
                   variant="outline"
+                  onClick={toggleSelectAllVisible}
+                  disabled={visibleCaseIds.length === 0}
+                >
+                  {allVisibleSelected ? 'Снять выбор' : 'Выбрать все'}
+                </Button>
+                <Button 
+                  variant="outline"
                   onClick={() => setBulkEditDialog(true)}
                   disabled={selectedIds.length === 0}
                 >
                   <Edit3 className="w-4 h-4 mr-2" /> Изменить ({selectedIds.length})
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={handleDeleteSelected}
+                  disabled={selectedIds.length === 0 || deleteTestCaseMutation.isPending}
+                  className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Удалить ({selectedIds.length})
                 </Button>
                 <Button variant="outline" onClick={toggleBulkMode}>
                   <X className="w-4 h-4 mr-2" /> Отмена
@@ -234,6 +464,18 @@ export default function Repository() {
 
       {/* Search & Project Filter */}
       <div className="space-y-3">
+        {bulkMode && (
+          <div className="flex flex-col gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 text-indigo-700">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded border-2 border-indigo-500 bg-white text-[10px] font-bold leading-none">
+                ✓
+              </span>
+              <span>Режим выбора включён — чекбоксы находятся в первом столбце таблицы.</span>
+            </div>
+            <span className="font-medium text-indigo-700">Выбрано: {selectedIds.length}</span>
+          </div>
+        )}
+
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -245,7 +487,7 @@ export default function Repository() {
         </div>
         
         {/* Project Filter */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap" data-onboarding-repository-project-filter>
           <Button
             variant={!selectedProject ? 'default' : 'outline'}
             size="sm"
@@ -264,7 +506,7 @@ export default function Repository() {
                 borderColor: project.color
               }}
             >
-              {project.key}
+              {project.name}
             </Button>
           ))}
         </div>
@@ -273,25 +515,32 @@ export default function Repository() {
       {/* Main Content */}
       <div className="grid grid-cols-12 gap-6">
         {/* Folder Tree */}
-        <div className="col-span-12 lg:col-span-3 space-y-6">
+        <div className="col-span-12 lg:col-span-3 space-y-6" data-onboarding-repository-folders>
           <FolderTree
-            folders={folders}
+            folders={projectVisibleFolders}
             selectedId={selectedFolder}
             onSelect={setSelectedFolder}
             onAddFolder={handleAddFolder}
+            onDeleteFolder={handleDeleteFolder}
+            onDeleteAllFolders={handleDeleteAllFolders}
+            canDelete={permissions.canManageStructure}
           />
           <SmartFilters filters={filters} onChange={setFilters} />
         </div>
 
         {/* Test Cases Table */}
-        <div className="col-span-12 lg:col-span-9">
+        <div className="col-span-12 lg:col-span-9" data-onboarding-repository-cases>
           <TestCaseTable
             testCases={filteredCases}
             onSelect={handleCaseSelect}
+            onDelete={handleDeleteOne}
             selectedId={selectedCase?.id}
             bulkMode={bulkMode}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelectId}
+            onToggleSelectAll={toggleSelectAllVisible}
+            allSelected={allVisibleSelected}
+            canDelete={permissions.canManageStructure}
           />
         </div>
       </div>
@@ -303,6 +552,8 @@ export default function Repository() {
         testCase={selectedCase}
         onSave={handleSaveCase}
         folders={folders}
+        initialProjectId={selectedCase?.project_id || selectedProject || ''}
+        initialFolderId={selectedCase?.folder_id || selectedFolder || ''}
       />
 
       {/* New Folder Dialog */}
@@ -362,6 +613,44 @@ export default function Repository() {
         folders={folders}
         onApply={handleBulkEdit}
       />
+
+      <Dialog open={!!deleteDialog} onOpenChange={(open) => !open && setDeleteDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {deleteDialog?.mode === 'single'
+                ? 'Удалить тест-кейс?'
+                : deleteDialog?.mode === 'folder'
+                  ? 'Удалить модуль?'
+                  : deleteDialog?.mode === 'all-folders'
+                    ? 'Удалить все модули?'
+                  : 'Удалить выбранные тест-кейсы?'}
+            </DialogTitle>
+            <DialogDescription>
+              {deleteDialog?.mode === 'single'
+                ? `Тест-кейс «${deleteDialog?.title || ''}» будет удалён без возможности восстановления.`
+                : deleteDialog?.mode === 'folder'
+                  ? `Модуль «${deleteDialog?.title || ''}» будет удалён вместе с ${deleteDialog?.count || 0} подпапками и ${deleteDialog?.linkedCasesCount || 0} тест-кейсами без возможности восстановления.`
+                  : deleteDialog?.mode === 'all-folders'
+                    ? `Будут удалены все модули (${deleteDialog?.count || 0}), включая подпапки и ${deleteDialog?.linkedCasesCount || 0} тест-кейсов внутри них, без возможности восстановления.`
+                  : `Будут удалены ${deleteDialog?.count || 0} выбранных тест-кейсов без возможности восстановления.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialog(null)} disabled={isDeletePending}>
+              Отмена
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDelete}
+              disabled={isDeletePending}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {isDeletePending ? 'Удаление...' : 'Удалить'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

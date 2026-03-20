@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 const plans = [
   {
     id: 'free',
-    name: 'Free',
+    name: 'Бесплатный',
     subtitle: 'Для пет-проектов и фрилансеров',
     price: 0,
     period: 'навсегда',
@@ -32,7 +32,7 @@ const plans = [
       { text: 'Базовая отчетность', included: true },
       { text: 'Экспресс-тестирование (AI)', included: true },
       { text: 'Mind Map редактор', included: false },
-      { text: 'AI Risk-Based Testing', included: false },
+      { text: 'Риск-ориентированное тестирование с ИИ', included: false },
       { text: 'Экспорт в PDF', included: false },
       { text: 'Интеграции', included: false },
       { text: 'История изменений', included: false },
@@ -42,7 +42,7 @@ const plans = [
   },
   {
     id: 'team',
-    name: 'Team',
+    name: 'Команда',
     subtitle: 'Для небольших команд и стартапов',
     price: 1500,
     period: 'за пользователя в месяц',
@@ -51,14 +51,14 @@ const plans = [
     features: [
       { text: 'Безлимитное количество проектов', included: true },
       { text: 'Безлимитное количество тест-кейсов', included: true },
-      { text: 'До 10 активных пользователей (Tester, QA Lead)', included: true },
-      { text: 'Безлимит Viewer (только просмотр)', included: true },
+      { text: 'До 10 активных пользователей (Тестировщик, QA Lead)', included: true },
+      { text: 'Безлимит наблюдателей (только просмотр)', included: true },
       { text: 'Общие шаги (Shared Steps)', included: true },
       { text: 'Mind Map редактор', included: true },
-      { text: 'AI Risk-Based Testing', included: true },
+      { text: 'Риск-ориентированное тестирование с ИИ', included: true },
       { text: 'AI-генерация тест-кейсов', included: true },
-      { text: 'Интеграция с Jira/YouTrack/GitHub', included: true },
-      { text: 'Automation API', included: true },
+      { text: 'Интеграция с Jira / YouTrack / GitHub', included: true },
+      { text: 'API автоматизации', included: true },
       { text: 'Трассируемость требований', included: true },
       { text: 'История изменений (30 дней)', included: true },
       { text: 'Экспорт в PDF', included: true },
@@ -69,7 +69,7 @@ const plans = [
   },
   {
     id: 'enterprise',
-    name: 'Business / Enterprise',
+    name: 'Бизнес / Enterprise',
     subtitle: 'Для крупных компаний',
     price: null,
     priceText: 'Индивидуально',
@@ -77,15 +77,15 @@ const plans = [
     icon: Building2,
     color: 'purple',
     features: [
-      { text: 'Всё из тарифа Team', included: true },
+      { text: 'Всё из тарифа «Команда»', included: true },
       { text: 'Безлимитное количество пользователей', included: true },
       { text: 'AI-ассистент для анализа багов', included: true },
-      { text: 'Advanced Analytics и прогнозы', included: true },
-      { text: 'Audit Log (полный лог доступа)', included: true },
-      { text: 'Управление командой (Workload)', included: true },
+      { text: 'Расширенная аналитика и прогнозы', included: true },
+      { text: 'Журнал аудита (полный лог доступа)', included: true },
+      { text: 'Управление командной нагрузкой', included: true },
       { text: 'SSO / SAML (Google, Okta, AD)', included: true },
-      { text: 'Self-hosted версия', included: true },
-      { text: 'Webhooks и кастомные интеграции', included: true },
+      { text: 'Локальная self-hosted версия', included: true },
+      { text: 'Вебхуки и кастомные интеграции', included: true },
       { text: 'История изменений (безлимит)', included: true },
       { text: 'Персональный менеджер', included: true },
       { text: 'SLA гарантии', included: true },
@@ -119,7 +119,7 @@ export default function Billing() {
                 <Crown className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Вы используете план Free</h3>
+                <h3 className="font-semibold text-foreground">Вы используете бесплатный тариф</h3>
                 <p className="text-sm text-muted-foreground">
                   2 из 3 проектов • 45 из 100 тест-кейсов использовано
                 </p>
@@ -265,13 +265,13 @@ export default function Billing() {
                   <td className="py-4 px-4 text-center text-sm text-foreground font-medium">Безлимит</td>
                 </tr>
                 <tr className="hover:bg-accent">
-                  <td className="py-4 px-4 text-sm text-foreground">Активные пользователи (Tester, QA Lead)</td>
+                  <td className="py-4 px-4 text-sm text-foreground">Активные пользователи (Тестировщик, QA Lead)</td>
                   <td className="py-4 px-4 text-center text-sm text-muted-foreground">1</td>
                   <td className="py-4 px-4 text-center text-sm text-foreground font-medium">До 10</td>
                   <td className="py-4 px-4 text-center text-sm text-foreground font-medium">Безлимит</td>
                 </tr>
                 <tr className="hover:bg-accent">
-                  <td className="py-4 px-4 text-sm text-foreground">Viewer (только просмотр)</td>
+                  <td className="py-4 px-4 text-sm text-foreground">Наблюдатель (только просмотр)</td>
                   <td className="py-4 px-4 text-center">
                     <div className="w-2 h-0.5 bg-slate-300 mx-auto" />
                   </td>
@@ -309,7 +309,7 @@ export default function Billing() {
                   </td>
                 </tr>
                 <tr className="hover:bg-accent">
-                  <td className="py-4 px-4 text-sm text-foreground">AI Risk-Based Testing</td>
+                  <td className="py-4 px-4 text-sm text-foreground">Риск-ориентированное тестирование с ИИ</td>
                   <td className="py-4 px-4 text-center">
                     <div className="w-2 h-0.5 bg-slate-300 mx-auto" />
                   </td>

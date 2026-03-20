@@ -13,9 +13,9 @@ export async function sendTestAssignedNotification(testRun, assignedTo) {
     for (const webhook of relevantWebhooks) {
       const message = `🎯 *Назначен новый тест*\n\n` +
         `Тестировщик: ${assignedTo}\n` +
-        `Тест: ${testRun.snapshot?.title || 'N/A'}\n` +
-        `Приоритет: ${testRun.snapshot?.priority || 'N/A'}\n` +
-        `Тип: ${testRun.snapshot?.type || 'Manual'}`;
+        `Тест: ${testRun.snapshot?.title || 'Н/Д'}\n` +
+        `Приоритет: ${testRun.snapshot?.priority || 'Н/Д'}\n` +
+        `Тип: ${testRun.snapshot?.type || 'Ручной'}`;
 
       if (webhook.type === 'email') {
         await appClient.integrations.Core.SendEmail({
@@ -23,9 +23,9 @@ export async function sendTestAssignedNotification(testRun, assignedTo) {
           subject: '🎯 Новый тест назначен вам',
           body: `<h2>Назначен новый тест</h2>
                  <p><strong>Тестировщик:</strong> ${assignedTo}</p>
-                 <p><strong>Тест:</strong> ${testRun.snapshot?.title || 'N/A'}</p>
-                 <p><strong>Приоритет:</strong> ${testRun.snapshot?.priority || 'N/A'}</p>
-                 <p><strong>Тип:</strong> ${testRun.snapshot?.type || 'Manual'}</p>
+                 <p><strong>Тест:</strong> ${testRun.snapshot?.title || 'Н/Д'}</p>
+                 <p><strong>Приоритет:</strong> ${testRun.snapshot?.priority || 'Н/Д'}</p>
+                 <p><strong>Тип:</strong> ${testRun.snapshot?.type || 'Ручной'}</p>
                  <p>Откройте TestFlow для выполнения теста.</p>`
         });
       } else if (webhook.type === 'slack') {
@@ -64,14 +64,14 @@ export async function sendPlanCompletedNotification(testPlan, stats, pdfUrl = nu
     for (const webhook of relevantWebhooks) {
       const message = `✅ *Тест-план завершен*\n\n` +
         `План: ${testPlan.name}\n` +
-        `Pass Rate: ${passRate}%\n` +
+        `Процент прохождения: ${passRate}%\n` +
         `Пройдено: ${stats.pass} из ${stats.total}\n` +
         `Провалено: ${stats.fail}`;
 
       if (webhook.type === 'email') {
         const emailBody = `<h2>✅ Тест-план завершен</h2>
           <p><strong>План:</strong> ${testPlan.name}</p>
-          <p><strong>Pass Rate:</strong> ${passRate}%</p>
+          <p><strong>Процент прохождения:</strong> ${passRate}%</p>
           <p><strong>Пройдено:</strong> ${stats.pass} из ${stats.total}</p>
           <p><strong>Провалено:</strong> ${stats.fail}</p>
           ${pdfUrl ? `<p><a href="${pdfUrl}">Скачать PDF отчет</a></p>` : ''}

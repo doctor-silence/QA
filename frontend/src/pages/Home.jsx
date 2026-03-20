@@ -61,7 +61,7 @@ export default function Home() {
     },
     {
       icon: Brain,
-      title: 'AI Risk-Based Testing',
+      title: 'Риск-ориентированное тестирование с ИИ',
       description: 'Умный анализ рисков и приоритизация тестов на основе истории',
       page: 'Execution',
       gradient: 'from-purple-500 to-pink-500'
@@ -97,8 +97,8 @@ export default function Home() {
   ];
 
   const stats = [
-    { icon: Sparkles, label: 'AI-powered', value: 'Умный анализ', gradient: 'from-purple-500 to-pink-500' },
-    { icon: Shield, label: 'Enterprise Ready', value: 'Надежность', gradient: 'from-blue-500 to-cyan-500' },
+    { icon: Sparkles, label: 'Поддержка ИИ', value: 'Умный анализ', gradient: 'from-purple-500 to-pink-500' },
+    { icon: Shield, label: 'Готово для бизнеса', value: 'Надёжность', gradient: 'from-blue-500 to-cyan-500' },
     { icon: Clock, label: 'Экономия времени', value: 'До 70%', gradient: 'from-emerald-500 to-teal-500' }
   ];
 
@@ -151,7 +151,7 @@ export default function Home() {
             TestFlow
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl">
-            Современная платформа управления тестированием с AI-аналитикой
+            Современная платформа управления тестированием с ИИ-аналитикой
           </p>
         </div>
 
@@ -166,10 +166,10 @@ export default function Home() {
                     <span className="text-white font-bold text-3xl">TF</span>
                   </div>
                   <h2 className="text-4xl font-bold text-white mb-3">Начните тестировать<br/>умнее</h2>
-                  <p className="text-indigo-100 text-lg max-w-md">AI-powered платформа для современных QA команд</p>
+                  <p className="text-indigo-100 text-lg max-w-md">Платформа с ИИ для современных QA-команд</p>
                 </div>
                 <div className="flex items-center text-white font-semibold group-hover:gap-2 transition-all">
-                  Открыть Dashboard <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+                  Открыть панель управления <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
               <div className="absolute top-0 right-0 w-full h-full opacity-10">

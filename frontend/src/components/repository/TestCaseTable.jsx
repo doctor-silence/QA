@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { FileText, Zap, AlertTriangle, Table, Bug } from 'lucide-react';
+import { FileText, Zap, AlertTriangle, Table, Bug, Trash2 } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 
 const priorityColors = {
@@ -17,7 +17,18 @@ const statusConfig = {
   Approved: { label: "✓ Утвержден", color: "bg-green-100 text-green-700 border-green-200" },
 };
 
-export default function TestCaseTable({ testCases, onSelect, selectedId, selectedIds = [], onToggleSelect, bulkMode = false }) {
+export default function TestCaseTable({
+  testCases,
+  onSelect,
+  onDelete,
+  selectedId,
+  selectedIds = [],
+  onToggleSelect,
+  onToggleSelectAll,
+  allSelected = false,
+  bulkMode = false,
+  canDelete = false,
+}) {
   if (testCases.length === 0) {
     return (
       <div className="bg-card rounded-2xl border border-border shadow-sm p-12 text-center">
@@ -33,13 +44,24 @@ export default function TestCaseTable({ testCases, onSelect, selectedId, selecte
         <thead>
           <tr className="border-b border-border bg-accent/50">
             {bulkMode && (
-              <th className="px-6 py-4 w-12"></th>
+              <th className="px-6 py-4 w-24 min-w-24">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={() => onToggleSelectAll?.()}
+                    aria-label="Выбрать все кейсы"
+                    className="h-5 w-5 border-2 border-indigo-500 bg-white shadow-sm data-[state=checked]:border-indigo-600 data-[state=checked]:bg-indigo-600"
+                  />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-indigo-700">Выбор</span>
+                </div>
+              </th>
             )}
             <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">ID</th>
             <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Название</th>
             <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Статус</th>
             <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Приоритет</th>
             <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Тип</th>
+            {canDelete && <th className="text-right px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Действия</th>}
           </tr>
         </thead>
         <tbody>
@@ -59,6 +81,8 @@ export default function TestCaseTable({ testCases, onSelect, selectedId, selecte
                   <Checkbox
                     checked={selectedIds.includes(tc.id)}
                     onCheckedChange={() => onToggleSelect(tc.id)}
+                    aria-label={`Выбрать тест-кейс ${tc.title}`}
+                    className="h-5 w-5 border-2 border-indigo-500 bg-white shadow-sm data-[state=checked]:border-indigo-600 data-[state=checked]:bg-indigo-600"
                   />
                 </td>
               )}
@@ -110,6 +134,18 @@ export default function TestCaseTable({ testCases, onSelect, selectedId, selecte
                   <span className="text-sm text-muted-foreground">{tc.type}</span>
                 </div>
               </td>
+              {canDelete && (
+                <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => onDelete?.(tc)}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-md text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    title="Удалить тест-кейс"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

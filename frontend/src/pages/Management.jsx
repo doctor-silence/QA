@@ -13,7 +13,7 @@ export default function Management() {
 
   const tabs = [
     { value: 'team', label: 'Команда', icon: Users, show: true },
-    { value: 'workload', label: 'Workload', icon: BarChart2, show: permissions.isAdmin || permissions.role === 'QA Lead' },
+    { value: 'workload', label: 'Нагрузка', icon: BarChart2, show: permissions.isAdmin || permissions.role === 'QA Lead' },
     { value: 'traceability', label: 'Трассируемость', icon: Link2, show: true },
     { value: 'audit', label: 'Аудит', icon: Shield, show: permissions.isAdmin }
   ].filter(tab => tab.show);

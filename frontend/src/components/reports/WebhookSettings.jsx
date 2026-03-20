@@ -9,9 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Send, Webhook } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
+import { useModal } from '../shared/ModalProvider';
 
 export default function WebhookSettings() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { showAlert } = useModal();
   const [formData, setFormData] = useState({
     name: '',
     type: 'slack',
@@ -65,9 +67,17 @@ export default function WebhookSettings() {
         });
       }
       
-      alert('Тестовое сообщение отправлено!');
+      await showAlert({
+        title: 'Тест отправлен',
+        description: 'Тестовое сообщение успешно отправлено.',
+        confirmLabel: 'OK',
+      });
     } catch (error) {
-      alert('Ошибка отправки: ' + error.message);
+      await showAlert({
+        title: 'Ошибка отправки',
+        description: `Ошибка отправки: ${error.message}`,
+        confirmLabel: 'Понятно',
+      });
     }
   };
 

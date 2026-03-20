@@ -83,7 +83,7 @@ export default function AutomationAPI() {
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight flex items-center gap-3">
             <Bot className="w-8 h-8 text-indigo-600" />
-            Automation API
+            API автоматизации
           </h1>
           <p className="text-muted-foreground mt-1">Интеграция с автотестами</p>
         </div>
@@ -296,15 +296,15 @@ await reportToTestFlow("run_xyz789", steps);`}
                 <h3 className="font-semibold mb-3">Статусы шагов</h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <Badge className="bg-green-100 text-green-700">pass</Badge>
+                    <Badge className="bg-green-100 text-green-700">успешно</Badge>
                     <span className="text-sm">Шаг выполнен успешно</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge className="bg-red-100 text-red-700">fail</Badge>
+                    <Badge className="bg-red-100 text-red-700">ошибка</Badge>
                     <span className="text-sm">Шаг провален</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge className="bg-slate-100 text-slate-700">skip</Badge>
+                    <Badge className="bg-slate-100 text-slate-700">пропуск</Badge>
                     <span className="text-sm">Шаг пропущен</span>
                   </div>
                 </div>

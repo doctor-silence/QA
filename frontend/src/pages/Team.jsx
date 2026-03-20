@@ -23,8 +23,8 @@ import RoleBadge from '../components/shared/RoleBadge';
 import { usePermissions } from '../components/shared/usePermissions';
 
 const QA_ROLES = [
-  { value: 'Viewer', label: 'Viewer', icon: Eye, color: 'text-slate-500' },
-  { value: 'Tester', label: 'Tester', icon: CheckCircle2, color: 'text-blue-500' },
+  { value: 'Viewer', label: 'Наблюдатель', icon: Eye, color: 'text-slate-500' },
+  { value: 'Tester', label: 'Тестировщик', icon: CheckCircle2, color: 'text-blue-500' },
   { value: 'QA Lead', label: 'QA Lead', icon: Shield, color: 'text-indigo-500' }
 ];
 
@@ -224,7 +224,7 @@ export default function Team() {
                         {user.role === 'admin' && (
                           <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/30">
                             <Shield className="w-3 h-3 mr-1" />
-                            Admin
+                            Администратор
                           </Badge>
                         )}
                       </div>
@@ -362,8 +362,8 @@ export default function Team() {
 
             <div className="bg-slate-500/10 border border-slate-500/30 rounded-lg p-3">
               <p className="text-xs text-muted-foreground">
-                <strong>Viewer:</strong> Только просмотр<br />
-                <strong>Tester:</strong> Выполнение тестов, создание багов<br />
+                <strong>Наблюдатель:</strong> Только просмотр<br />
+                <strong>Тестировщик:</strong> Выполнение тестов, создание багов<br />
                 <strong>QA Lead:</strong> Полный доступ к управлению тестами
               </p>
             </div>

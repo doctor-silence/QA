@@ -27,6 +27,7 @@ import CommentsSection from '../shared/CommentsSection';
 import CreateBugDialog from '../bugtracker/CreateBugDialog';
 import { usePermissions } from '../shared/usePermissions';
 import { sendTestAssignedNotification } from './NotificationHelper';
+import { useModal } from '../shared/ModalProvider';
 
 const statusConfig = {
   Pending: { icon: Clock, color: "text-slate-400", bg: "bg-slate-50", label: "Pending" },
@@ -39,6 +40,7 @@ const statusConfig = {
 
 export default function TestRunDrawer({ isOpen, onClose, testRun, onUpdate }) {
   const permissions = usePermissions();
+  const { showAlert } = useModal();
   const [comment, setComment] = useState('');
   const [screenshots, setScreenshots] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -112,7 +114,11 @@ export default function TestRunDrawer({ isOpen, onClose, testRun, onUpdate }) {
       const { file_url } = await appClient.integrations.Core.UploadFile({ file });
       setScreenshots(prev => [...prev, file_url]);
     } catch (error) {
-      alert('Ошибка загрузки: ' + error.message);
+      await showAlert({
+        title: 'Ошибка загрузки',
+        description: `Ошибка загрузки: ${error.message}`,
+        confirmLabel: 'Понятно',
+      });
     } finally {
       setUploading(false);
     }

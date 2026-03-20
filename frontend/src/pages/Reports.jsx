@@ -201,7 +201,7 @@ export default function Reports() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Reports</h1>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Отчёты</h1>
           <p className="text-muted-foreground mt-1">Отчетность и аналитика</p>
         </div>
       </div>
@@ -209,7 +209,7 @@ export default function Reports() {
       {/* Tabs */}
       <Tabs defaultValue="releases" className="w-full">
         <div className="flex items-center justify-between mb-6">
-          <TabsList className="bg-card border border-border">
+          <TabsList className="bg-card border border-border" data-onboarding-reports-tabs>
             <TabsTrigger value="releases" className="gap-2">
               <Rocket className="w-4 h-4" />
               Релизы
@@ -224,7 +224,7 @@ export default function Reports() {
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3" data-onboarding-reports-plan-filter>
             <Select value={selectedPlan} onValueChange={setSelectedPlan}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Выберите план" />
@@ -248,7 +248,7 @@ export default function Reports() {
         </div>
 
         {/* Releases Tab */}
-        <TabsContent value="releases" className="space-y-6">
+        <TabsContent value="releases" className="space-y-6" data-onboarding-reports-content>
           {releases.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {releases.map(release => {
@@ -278,7 +278,7 @@ export default function Reports() {
         </TabsContent>
 
         {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-6">
+        <TabsContent value="analytics" className="space-y-6" data-onboarding-reports-content>
           
           {/* Defect Mapping Section */}
           <DefectMappingSection testCases={testCases} testRuns={testRuns} />
@@ -295,7 +295,7 @@ export default function Reports() {
         
         <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Pass Rate</span>
+            <span className="text-sm font-medium text-muted-foreground">Процент прохождения</span>
             {passRate >= 80 ? (
               <TrendingUp className="w-5 h-5 text-emerald-500" />
             ) : (
@@ -448,7 +448,7 @@ export default function Reports() {
         </TabsContent>
 
         {/* Integrations Tab */}
-        <TabsContent value="integrations" className="space-y-6">
+        <TabsContent value="integrations" className="space-y-6" data-onboarding-reports-content>
           {permissions.canManageIntegrations ? (
             <div className="space-y-6">
               <div className="bg-card rounded-2xl border border-border shadow-sm p-6">

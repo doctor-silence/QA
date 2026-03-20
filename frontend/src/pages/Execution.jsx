@@ -251,9 +251,9 @@ export default function Execution() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-onboarding-execution-create>
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Test Execution</h1>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Выполнение тестов</h1>
           <p className="text-muted-foreground mt-1">Прогоны тестов</p>
         </div>
         <div className="flex gap-3">
@@ -278,7 +278,7 @@ export default function Execution() {
 
       <div className="grid grid-cols-12 gap-6">
         {/* Test Plans List */}
-        <div className="col-span-12 lg:col-span-4">
+        <div className="col-span-12 lg:col-span-4" data-onboarding-execution-plans>
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="p-4 border-b border-border">
               <h3 className="font-semibold text-foreground">Тест-планы</h3>
@@ -318,7 +318,7 @@ export default function Execution() {
         </div>
 
         {/* Test Runs */}
-        <div className="col-span-12 lg:col-span-8">
+        <div className="col-span-12 lg:col-span-8" data-onboarding-execution-runs>
           {selectedPlan ? (
             <div className="space-y-4">
               {/* Plan Header */}
@@ -511,7 +511,7 @@ export default function Execution() {
                   <div key={idx} className="bg-background rounded-lg p-3 space-y-2 border border-border">
                     <div className="flex items-center gap-2">
                       <Input
-                        placeholder="Название (например: Admin, User, Guest)"
+                        placeholder="Название (например: Администратор, Пользователь, Гость)"
                         value={dataSet.label}
                         onChange={(e) => {
                           const updated = [...testDataSets];

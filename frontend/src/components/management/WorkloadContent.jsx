@@ -191,7 +191,7 @@ export default function WorkloadContent() {
                     <div>
                       <p className="text-xs text-purple-600 dark:text-purple-400">Ср. время</p>
                       <p className="text-sm font-semibold text-purple-700 dark:text-purple-300">
-                        {avgTime > 0 ? `${Math.floor(avgTime / 60)}м ${avgTime % 60}с` : 'N/A'}
+                        {avgTime > 0 ? `${Math.floor(avgTime / 60)}м ${avgTime % 60}с` : 'Н/Д'}
                       </p>
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export default function WorkloadContent() {
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
           <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">Нет назначенных тестов</p>
-          <p className="text-sm text-muted-foreground mt-1">Назначьте тесты на исполнителей в разделе Execution</p>
+          <p className="text-sm text-muted-foreground mt-1">Назначьте тесты на исполнителей в разделе «Выполнение»</p>
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Edit2, Eye, EyeOff, Copy, Database, Search } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { usePermissions } from '../components/shared/usePermissions';
+import { useModal } from '../components/shared/ModalProvider';
 
 const CATEGORIES = [
   { value: 'credentials', label: 'Учетные данные', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
@@ -22,6 +23,7 @@ const CATEGORIES = [
 
 export default function TestDataStore() {
   const permissions = usePermissions();
+  const { showConfirm } = useModal();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingData, setEditingData] = useState(null);
@@ -269,8 +271,16 @@ export default function TestDataStore() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8 text-red-500"
-                                  onClick={() => {
-                                    if (confirm('Удалить переменную?')) {
+                                  onClick={async () => {
+                                    const confirmed = await showConfirm({
+                                      title: 'Удалить переменную?',
+                                      description: 'Переменная будет удалена без возможности восстановления.',
+                                      confirmLabel: 'Удалить',
+                                      cancelLabel: 'Отмена',
+                                      confirmClassName: 'bg-red-600 hover:bg-red-700',
+                                    });
+
+                                    if (confirmed) {
                                       deleteMutation.mutate(item.id);
                                     }
                                   }}

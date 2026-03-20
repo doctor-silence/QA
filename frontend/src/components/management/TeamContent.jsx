@@ -23,8 +23,8 @@ import RoleBadge from '../shared/RoleBadge';
 import { usePermissions } from '../shared/usePermissions';
 
 const QA_ROLES = [
-  { value: 'Viewer', label: 'Viewer', icon: Eye, color: 'text-slate-500' },
-  { value: 'Tester', label: 'Tester', icon: CheckCircle2, color: 'text-blue-500' },
+  { value: 'Viewer', label: 'Наблюдатель', icon: Eye, color: 'text-slate-500' },
+  { value: 'Tester', label: 'Тестировщик', icon: CheckCircle2, color: 'text-blue-500' },
   { value: 'QA Lead', label: 'QA Lead', icon: Shield, color: 'text-indigo-500' }
 ];
 
@@ -146,7 +146,7 @@ export default function TeamContent() {
                 {users.filter(u => u.qa_role !== 'Viewer').length}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Tester + QA Lead</p>
+            <p className="text-xs text-muted-foreground mt-1">Тестировщики и QA Lead</p>
           </CardContent>
         </Card>
 
@@ -225,7 +225,7 @@ export default function TeamContent() {
                         {user.role === 'admin' && (
                           <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/30">
                             <Shield className="w-3 h-3 mr-1" />
-                            Admin
+                            Администратор
                           </Badge>
                         )}
                       </div>
@@ -313,7 +313,7 @@ export default function TeamContent() {
                 <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div className="text-xs text-blue-700 dark:text-blue-400">
                   <p className="mb-1">После отправки приглашения пользователь получит email с ссылкой для регистрации</p>
-                  <p className="font-semibold">💡 Viewer не входит в лимит оплачиваемых пользователей</p>
+                  <p className="font-semibold">💡 Наблюдатель не входит в лимит оплачиваемых пользователей</p>
                 </div>
               </div>
             </div>

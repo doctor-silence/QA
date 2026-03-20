@@ -66,7 +66,7 @@ export default function ReleaseCard({ release, testPlan, stats, onClick }) {
               passRate >= 50 ? "text-amber-600 dark:text-amber-400" : 
               "text-red-600 dark:text-red-400"
             )}>
-              {passRate}% Pass Rate
+              {passRate}% прохождения
             </span>
           </div>
           
@@ -80,11 +80,11 @@ export default function ReleaseCard({ release, testPlan, stats, onClick }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs text-foreground">{stats.pass} Pass</span>
+              <span className="text-xs text-foreground">{stats.pass} успешно</span>
             </div>
             <div className="flex items-center gap-2">
               <XCircle className="w-4 h-4 text-red-500" />
-              <span className="text-xs text-foreground">{stats.fail} Fail</span>
+              <span className="text-xs text-foreground">{stats.fail} с ошибкой</span>
             </div>
           </div>
         </div>

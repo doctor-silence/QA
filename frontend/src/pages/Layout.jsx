@@ -17,32 +17,39 @@ import {
   CreditCard,
   Folder,
   Database,
-  GitBranch
+  GitBranch,
+  LifeBuoy
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { usePermissions } from '@/components/shared/usePermissions';
 import RoleBadge from '@/components/shared/RoleBadge';
 import { useTheme, ThemeProvider } from '@/components/shared/ThemeProvider';
 import { Button } from "@/components/ui/button";
+import OnboardingTour, { resetOnboardingSeenPages, restartOnboardingForCurrentPage } from '@/components/shared/OnboardingTour';
 
 const navItems = [
-  { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
-  { name: 'Projects', icon: Folder, page: 'Projects' },
-  { name: 'Repository', icon: FolderTree, page: 'Repository' },
-  { name: 'Mind Map', icon: GitBranch, page: 'MindMap' },
-  { name: 'Test Data', icon: Database, page: 'TestDataStore' },
-  { name: 'Shared Steps', icon: Blocks, page: 'SharedSteps' },
-  { name: 'Reviews', icon: CheckSquare, page: 'Reviews' },
-  { name: 'Execution', icon: PlayCircle, page: 'Execution' },
-  { name: 'Automation API', icon: TestTube2, page: 'AutomationAPI' },
-  { name: 'Management', icon: User, page: 'Management' },
-  { name: 'Reports', icon: BarChart3, page: 'Reports' },
-  { name: 'Billing', icon: CreditCard, page: 'Billing' },
+  { name: 'Панель управления', icon: LayoutDashboard, page: 'Dashboard' },
+  { name: 'Проекты', icon: Folder, page: 'Projects' },
+  { name: 'Репозиторий', icon: FolderTree, page: 'Repository' },
+  { name: 'Интеллект-карта', icon: GitBranch, page: 'MindMap' },
+  { name: 'Тестовые данные', icon: Database, page: 'TestDataStore' },
+  { name: 'Общие шаги', icon: Blocks, page: 'SharedSteps' },
+  { name: 'Ревью', icon: CheckSquare, page: 'Reviews' },
+  { name: 'Выполнение', icon: PlayCircle, page: 'Execution' },
+  { name: 'API автоматизации', icon: TestTube2, page: 'AutomationAPI' },
+  { name: 'Управление', icon: User, page: 'Management' },
+  { name: 'Отчёты', icon: BarChart3, page: 'Reports' },
+  { name: 'Тарифы', icon: CreditCard, page: 'Billing' },
 ];
 
 function LayoutContent({ children, currentPageName }) {
   const permissions = usePermissions();
   const { theme, setTheme } = useTheme();
+
+  const handleRestartOnboarding = () => {
+    resetOnboardingSeenPages();
+    restartOnboardingForCurrentPage();
+  };
   
   // Don't render layout for Home page
   if (currentPageName === 'Home') {
@@ -64,12 +71,12 @@ function LayoutContent({ children, currentPageName }) {
             </div>
             <div>
               <h1 className="font-semibold text-foreground tracking-tight">TestFlow</h1>
-              <p className="text-xs text-muted-foreground">QA Management</p>
+              <p className="text-xs text-muted-foreground">Управление QA</p>
             </div>
           </div>
         </div>
         
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto" data-onboarding-sidebar="nav">
           {navItems
             .filter(item => {
               // Only admins and QA Leads can see Billing, Management, MindMap, AutomationAPI
@@ -84,6 +91,7 @@ function LayoutContent({ children, currentPageName }) {
                 <Link
                   key={item.name}
                   to={createPageUrl(item.page)}
+                  data-onboarding-nav={item.page}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                     isActive 
@@ -100,6 +108,16 @@ function LayoutContent({ children, currentPageName }) {
 
         {/* Theme Toggle */}
         <div className="p-4 border-t border-border">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRestartOnboarding}
+            className="mb-3 w-full justify-start gap-2"
+          >
+            <LifeBuoy className="w-4 h-4" />
+            <span>Показать обучение заново</span>
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -140,10 +158,12 @@ function LayoutContent({ children, currentPageName }) {
       
       {/* Main Content */}
       <main className="ml-64 min-h-screen">
-        <div className="p-8">
+        <div className="p-8" data-onboarding-content={currentPageName}>
           {children}
         </div>
       </main>
+
+      <OnboardingTour currentPageName={currentPageName} />
     </div>
   );
 }

@@ -112,7 +112,7 @@ export default function ReleaseDetails({ release, testPlan, testRuns, onEdit, on
               <div className="bg-slate-50 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  <span className="text-sm text-slate-500">Pass</span>
+                  <span className="text-sm text-slate-500">Успешно</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-800">{stats.pass}</p>
               </div>
@@ -120,7 +120,7 @@ export default function ReleaseDetails({ release, testPlan, testRuns, onEdit, on
               <div className="bg-slate-50 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <XCircle className="w-5 h-5 text-red-500" />
-                  <span className="text-sm text-slate-500">Fail</span>
+                  <span className="text-sm text-slate-500">Ошибка</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-800">{stats.fail}</p>
               </div>
@@ -128,7 +128,7 @@ export default function ReleaseDetails({ release, testPlan, testRuns, onEdit, on
               <div className="bg-slate-50 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
-                  <span className="text-sm text-slate-500">Blocked</span>
+                  <span className="text-sm text-slate-500">Заблокировано</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-800">{stats.blocked}</p>
               </div>
@@ -136,7 +136,7 @@ export default function ReleaseDetails({ release, testPlan, testRuns, onEdit, on
               <div className="bg-slate-50 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-5 h-5 text-slate-400" />
-                  <span className="text-sm text-slate-500">Pass Rate</span>
+                  <span className="text-sm text-slate-500">Процент прохождения</span>
                 </div>
                 <p className={cn(
                   "text-2xl font-bold",

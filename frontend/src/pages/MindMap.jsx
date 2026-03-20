@@ -49,6 +49,7 @@ import {
 import { cn } from "@/lib/utils";
 import { motion, useDragControls } from 'framer-motion';
 import { usePermissions } from '../components/shared/usePermissions';
+import { useModal } from '../components/shared/ModalProvider';
 
 const NODE_TYPES = {
   FOLDER: 'folder',
@@ -66,6 +67,7 @@ const MODES = {
 
 export default function MindMap() {
   const permissions = usePermissions();
+  const { showAlert } = useModal();
   const queryClient = useQueryClient();
   const canvasRef = useRef(null);
   
@@ -123,9 +125,13 @@ export default function MindMap() {
     }
   };
 
-  const saveProcess = () => {
+  const saveProcess = async () => {
     if (!processName.trim()) {
-      alert('Введите название процесса');
+      await showAlert({
+        title: 'Нужно название процесса',
+        description: 'Введите название процесса перед сохранением.',
+        confirmLabel: 'Понятно',
+      });
       return;
     }
 
@@ -208,7 +214,11 @@ export default function MindMap() {
 
   const exportToRepository = async (projectId) => {
     if (!projectId) {
-      alert('Выберите проект');
+      await showAlert({
+        title: 'Нужно выбрать проект',
+        description: 'Выберите проект перед экспортом в Repository.',
+        confirmLabel: 'Понятно',
+      });
       return;
     }
 
@@ -261,7 +271,11 @@ export default function MindMap() {
       setExportDialog(false);
       setSuccessMessage('Структура успешно экспортирована в Repository!');
     } catch (error) {
-      alert('Ошибка экспорта: ' + error.message);
+      await showAlert({
+        title: 'Ошибка экспорта',
+        description: `Ошибка экспорта: ${error.message}`,
+        confirmLabel: 'Понятно',
+      });
     }
   };
 
@@ -325,7 +339,11 @@ export default function MindMap() {
         setConnections(newConnections);
       }
     } catch (error) {
-      alert('Ошибка генерации: ' + error.message);
+      await showAlert({
+        title: 'Ошибка генерации',
+        description: `Ошибка генерации: ${error.message}`,
+        confirmLabel: 'Понятно',
+      });
     }
   };
 

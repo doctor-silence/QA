@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,13 +17,16 @@ import VariableHelper from './VariableHelper';
 import { appClient } from '@/api/client';
 import { useQuery } from '@tanstack/react-query';
 import { usePermissions } from '../shared/usePermissions';
+import { useModal } from '../shared/ModalProvider';
 
 const TAGS = ['Smoke', 'Regression', 'API', 'UI', 'Integration', 'E2E'];
 
-export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, folders }) {
+export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, folders, initialProjectId = '', initialFolderId = '' }) {
   const permissions = usePermissions();
+  const { showAlert } = useModal();
   const [formData, setFormData] = useState({
     title: '',
+    project_id: initialProjectId || '',
     folder_id: '',
     priority: 'P3',
     type: 'Manual',
@@ -52,6 +55,11 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
     queryFn: () => appClient.entities.Project.list()
   });
 
+  const { data: testCases = [] } = useQuery({
+    queryKey: ['testCases'],
+    queryFn: () => appClient.entities.TestCase.list()
+  });
+
   useEffect(() => {
     if (testCase) {
       setFormData({
@@ -75,8 +83,8 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
     } else {
       setFormData({
         title: '',
-        project_id: '',
-        folder_id: '',
+        project_id: initialProjectId || '',
+        folder_id: initialFolderId || '',
         priority: 'P3',
         type: 'Manual',
         status: 'Draft',
@@ -92,7 +100,62 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
         test_data_sets: []
       });
     }
-  }, [testCase]);
+  }, [initialFolderId, initialProjectId, testCase]);
+
+  const availableFolders = useMemo(() => {
+    if (!formData.project_id) {
+      return [];
+    }
+
+    const folderIds = new Set();
+
+    testCases
+      .filter((item) => item.project_id === formData.project_id && item.folder_id)
+      .forEach((item) => {
+        let currentFolderId = item.folder_id;
+
+        while (currentFolderId) {
+          folderIds.add(currentFolderId);
+          const currentFolder = folders.find((folder) => folder.id === currentFolderId);
+          currentFolderId = currentFolder?.parent_id || null;
+        }
+      });
+
+    if (testCase?.folder_id) {
+      let currentFolderId = testCase.folder_id;
+
+      while (currentFolderId) {
+        folderIds.add(currentFolderId);
+        const currentFolder = folders.find((folder) => folder.id === currentFolderId);
+        currentFolderId = currentFolder?.parent_id || null;
+      }
+    }
+
+    if (initialFolderId) {
+      let currentFolderId = initialFolderId;
+
+      while (currentFolderId) {
+        folderIds.add(currentFolderId);
+        const currentFolder = folders.find((folder) => folder.id === currentFolderId);
+        currentFolderId = currentFolder?.parent_id || null;
+      }
+    }
+
+    return folders.filter((folder) => folderIds.has(folder.id));
+  }, [folders, formData.project_id, initialFolderId, testCase?.folder_id, testCases]);
+
+  useEffect(() => {
+    if (!formData.project_id) {
+      if (formData.folder_id) {
+        setFormData((prev) => ({ ...prev, folder_id: '' }));
+      }
+      return;
+    }
+
+    if (formData.folder_id && !availableFolders.some((folder) => folder.id === formData.folder_id)) {
+      setFormData((prev) => ({ ...prev, folder_id: '' }));
+    }
+  }, [availableFolders, formData.folder_id, formData.project_id]);
 
   const addStep = () => {
     setFormData(prev => ({
@@ -137,7 +200,11 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
 
   const handleSendToReview = async () => {
     if (!formData.reviewer) {
-      alert('Выберите ревьювера');
+      await showAlert({
+        title: 'Нужно выбрать ревьювера',
+        description: 'Перед отправкой на проверку выберите ревьювера.',
+        confirmLabel: 'Понятно',
+      });
       return;
     }
     onSave({ ...formData, status: 'Under Review' });
@@ -155,7 +222,11 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
 
   const handleReject = async () => {
     if (!formData.review_comment) {
-      alert('Добавьте комментарий для отклонения');
+      await showAlert({
+        title: 'Нужен комментарий',
+        description: 'Добавьте комментарий для отклонения тест-кейса.',
+        confirmLabel: 'Понятно',
+      });
       return;
     }
     onSave({ ...formData, status: 'Draft' });
@@ -163,7 +234,11 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
 
   const generateStepsWithAI = async () => {
     if (!formData.title.trim()) {
-      alert('Сначала введите название тест-кейса');
+      await showAlert({
+        title: 'Нужно название тест-кейса',
+        description: 'Сначала введите название тест-кейса, а потом запускайте генерацию шагов.',
+        confirmLabel: 'Понятно',
+      });
       return;
     }
     
@@ -196,7 +271,11 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
         setFormData(prev => ({ ...prev, steps: result.steps }));
       }
     } catch (error) {
-      alert('Ошибка генерации: ' + error.message);
+      await showAlert({
+        title: 'Ошибка генерации',
+        description: `Ошибка генерации: ${error.message}`,
+        confirmLabel: 'Понятно',
+      });
     } finally {
       setGeneratingSteps(false);
     }
@@ -240,7 +319,7 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
             <Label>Проект</Label>
             <Select 
               value={formData.project_id} 
-              onValueChange={(v) => setFormData(prev => ({ ...prev, project_id: v }))}
+              onValueChange={(v) => setFormData(prev => ({ ...prev, project_id: v, folder_id: '' }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Выберите проект" />
@@ -262,12 +341,13 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
               <Select 
                 value={formData.folder_id} 
                 onValueChange={(v) => setFormData(prev => ({ ...prev, folder_id: v }))}
+                disabled={!formData.project_id}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите" />
+                  <SelectValue placeholder={formData.project_id ? "Выберите" : "Сначала выберите проект"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {folders.map(f => (
+                  {availableFolders.map(f => (
                     <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -302,8 +382,8 @@ export default function TestCaseDrawer({ isOpen, onClose, testCase, onSave, fold
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Manual">Manual</SelectItem>
-                  <SelectItem value="Automated">Automated</SelectItem>
+                  <SelectItem value="Manual">Ручной</SelectItem>
+                  <SelectItem value="Automated">Автоматизированный</SelectItem>
                 </SelectContent>
               </Select>
             </div>

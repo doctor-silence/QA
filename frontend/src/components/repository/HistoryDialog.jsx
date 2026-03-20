@@ -8,9 +8,11 @@ import { Clock, User, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns';
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useModal } from '@/components/shared/ModalProvider';
 
 export default function HistoryDialog({ testCase, open, onOpenChange }) {
   const queryClient = useQueryClient();
+  const { showConfirm } = useModal();
   const [expandedVersion, setExpandedVersion] = useState(null);
   const [compareWith, setCompareWith] = useState(null);
 
@@ -32,8 +34,14 @@ export default function HistoryDialog({ testCase, open, onOpenChange }) {
     }
   });
 
-  const handleRestore = (snapshot) => {
-    if (confirm('Восстановить эту версию тест-кейса?')) {
+  const handleRestore = async (snapshot) => {
+    const confirmed = await showConfirm({
+      title: 'Восстановить версию?',
+      description: 'Текущая версия тест-кейса будет заменена выбранной из истории.',
+      confirmLabel: 'Восстановить',
+    });
+
+    if (confirmed) {
       restoreMutation.mutate(snapshot);
     }
   };

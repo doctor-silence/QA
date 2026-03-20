@@ -140,7 +140,7 @@ ${idx + 1}. "${risk.testCase.title}"
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-indigo-900">
             <Sparkles className="w-5 h-5" />
-            AI Risk-Based Testing
+            Риск-ориентированное тестирование с ИИ
           </CardTitle>
         </CardHeader>
         <CardContent>
